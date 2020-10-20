@@ -19,10 +19,10 @@ def get_all_entries():
         db_cursor.execute("""
         SELECT
             a.id,
-            a.name,
+            a.title,
             a.description,
-            a.moods_id,
-        FROM entry a
+            a.moods_id
+        FROM JournalEntries a
         """)
 
         # Initialize an empty list to hold all entry representations
@@ -38,7 +38,7 @@ def get_all_entries():
             # Note that the database fields are specified in
             # exact order of the parameters defined in the
             # entry class above.
-            entry = Entry(row['id'], row['name'], row['description'],
+            entry = Entry(row['id'], row['title'], row['description'],
                             row['moods_id'])
 
             entries.append(entry.__dict__)
@@ -57,10 +57,10 @@ def get_single_entry(id):
         db_cursor.execute("""
         SELECT
             a.id,
-            a.name,
+            a.title,
             a.description,
-            a.moods_id,
-        FROM entry a
+            a.moods_id
+        FROM JournalEntries a
         WHERE a.id = ?
         """, ( id, ))
 
@@ -68,7 +68,7 @@ def get_single_entry(id):
         data = db_cursor.fetchone()
 
         # Create an entry instance from the current row
-        entry = Entry(data['id'], data['name'], data['description'],
+        entry = Entry(data['id'], data['title'], data['description'],
                             data['moods_id'])
 
         return json.dumps(entry.__dict__)
@@ -94,7 +94,7 @@ def delete_entry(id):
         db_cursor = conn.cursor()
 
         db_cursor.execute("""
-        DELETE FROM entry
+        DELETE FROM JournalEntries
         WHERE id = ?
         """, (id, ))
 
