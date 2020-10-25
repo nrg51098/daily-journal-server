@@ -1,6 +1,7 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from entries import get_all_entries, get_single_entry, create_entry, delete_entry,update_entry
+from entries import get_all_entries, get_single_entry, create_entry, delete_entry, update_entry
+from moods import get_all_moods, get_single_mood, create_mood, delete_mood, update_mood
 import json
 # Here's a class. It inherits from another class.
 class HandleRequests(BaseHTTPRequestHandler):
@@ -10,6 +11,13 @@ class HandleRequests(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header('Content-type', 'application/json')
         self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE')
+        self.send_header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept')
         self.end_headers()
 
     # Here's a method on the class that overrides the parent's method.
@@ -32,7 +40,12 @@ class HandleRequests(BaseHTTPRequestHandler):
                 if id is not None:
                     response = f"{get_single_entry(id)}"
                 else:
-                    response = f"{get_all_entries()}"            
+                    response = f"{get_all_entries()}"
+            if resource == "moods":
+                if id is not None:
+                    response = f"{get_single_mood(id)}"
+                else:
+                    response = f"{get_all_moods()}"            
 
         
         self.wfile.write(response.encode())
@@ -57,7 +70,9 @@ class HandleRequests(BaseHTTPRequestHandler):
         # the orange squiggle, you'll define the create_entrie
         # function next.
         if resource == "entries":
-            new_object = create_entry(post_body)        
+            new_object = create_entry(post_body)
+        if resource == "moods":
+            new_object = create_mood(post_body)     
 
         # Encode the new entrie and send in response
         self.wfile.write(f"{new_object}".encode())
@@ -71,12 +86,20 @@ class HandleRequests(BaseHTTPRequestHandler):
         post_body = self.rfile.read(content_len)
         post_body = json.loads(post_body)
 
+        success = False
         # Parse the URL
         (resource, id) = self.parse_url(self.path)
 
         # Delete a single entrie from the list
         if resource == "entries":
             update_entry(id, post_body)
+        if resource == "moods":
+            update_mood(id, post_body)
+
+        if success:
+            self._set_headers(204)
+        else:
+            self._set_headers(404)
 
         # Encode the new entrie and send in response
         self.wfile.write("".encode())
@@ -91,6 +114,8 @@ class HandleRequests(BaseHTTPRequestHandler):
         # Delete a single entrie from the list
         if resource == "entries":
             delete_entry(id)
+        if resource == "moods":
+            delete_mood(id)
         
         # Encode the new entrie and send in response
         self.wfile.write("".encode())

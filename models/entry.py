@@ -3,9 +3,10 @@ class Entry():
     # Class initializer. It has 5 custom parameters, with the
     # special `self` parameter that every method on a class
     # needs as the first parameter.
-    def __init__(self, id, title, description, moods_id):
+    def __init__(self, id, concept, entry, date, moodId):
         self.id = id
-        self.title = title
-        self.description = description
-        self.moods_id = moods_id
+        self.concept = concept
+        self.entry = entry
+        self.date = date
+        self.moodId = moodId
 

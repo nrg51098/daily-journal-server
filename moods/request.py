@@ -1,9 +1,8 @@
-from models.entry import Entry
+from models.mood import Mood
 import sqlite3
 import json
 
-
-def get_all_entries():
+def get_all_moods():
     # Open a connection to the database
     with sqlite3.connect("./dailyjournal.db") as conn:
 
@@ -14,16 +13,13 @@ def get_all_entries():
         # Write the SQL query to get the information you want
         db_cursor.execute("""
         SELECT
-            a.id,
-            a.concept,
-            a.entry,
-            a.date,
-            a.moods_id
-        FROM JournalEntries a
+            m.id,
+            m.label
+        FROM Moods m
         """)
 
-        # Initialize an empty list to hold all entry representations
-        entries = []
+        # Initialize an empty list to hold all mood representations
+        moods = []
 
         # Convert rows of data into a Python list
         dataset = db_cursor.fetchall()
@@ -31,20 +27,19 @@ def get_all_entries():
         # Iterate list of data returned from database
         for row in dataset:
 
-            # Create an entry instance from the current row.
+            # Create an mood instance from the current row.
             # Note that the database fields are specified in
             # exact order of the parameters defined in the
-            # entry class above.
-            entry = Entry(row['id'], row['concept'], row['entry'], row['date'],
-                            row['moods_id'])
+            # mood class above.
+            mood = Mood(row['id'], row['label'])
 
-            entries.append(entry.__dict__)
+            moods.append(mood.__dict__)
 
     # Use `json` package to properly serialize list as JSON
-    return json.dumps(entries)
+    return json.dumps(moods)
 
 # Function with a single parameter
-def get_single_entry(id):
+def get_single_mood(id):
     with sqlite3.connect("./dailyjournal.db") as conn:
         conn.row_factory = sqlite3.Row
         db_cursor = conn.cursor()
@@ -54,71 +49,62 @@ def get_single_entry(id):
         db_cursor.execute("""
         SELECT
             a.id,
-            a.concept,
-            a.entry,
-            a.date,
-            a.moods_id
-        FROM JournalEntries a
+            a.label
+        FROM Moods a
         WHERE a.id = ?
         """, ( id, ))
 
         # Load the single result into memory
         data = db_cursor.fetchone()
 
-        # Create an entry instance from the current row
-        entry = Entry(data['id'], data['concept'], data['entry'], data['date'],
-                            data['moods_id'])
+        # Create an mood instance from the current row
+        mood = Mood(data['id'], data['label'])
 
-        return json.dumps(entry.__dict__)
+        return json.dumps(mood.__dict__)
 
-def create_entry(new_entry):
+def create_mood(new_mood):
     with sqlite3.connect("./dailyjournal.db") as conn:
         db_cursor = conn.cursor()
 
         db_cursor.execute("""
-        INSERT INTO JournalEntries
-            ( concept, entry, date, moods_id )
+        INSERT INTO Moods
+            ( label )
         VALUES
-            ( ?, ?, ?, ?);
-        """, (new_entry['concept'], new_entry['entry'],
-              new_entry['date'], new_entry['moodId'], ))
+            ( ?);
+        """, (new_mood['label'], ))
 
         # The `lastrowid` property on the cursor will return
         # the primary key of the last thing that got added to
         # the database.
         id = db_cursor.lastrowid
 
-        # Add the `id` property to the entry dictionary that
+        # Add the `id` property to the mood dictionary that
         # was sent by the client so that the client sees the
         # primary key in the response.
-        new_entry['id'] = id
+        new_mood['id'] = id
 
 
-    return json.dumps(new_entry)
+    return json.dumps(new_mood)
 
-def delete_entry(id):
+def delete_mood(id):
     with sqlite3.connect("./dailyjournal.db") as conn:
         db_cursor = conn.cursor()
 
         db_cursor.execute("""
-        DELETE FROM JournalEntries
+        DELETE FROM Moods
         WHERE id = ?
         """, (id, ))
 
-def update_entry(id, new_entry):
+def update_mood(id, new_mood):
     with sqlite3.connect("./dailyjournal.db") as conn:
         db_cursor = conn.cursor()
 
         db_cursor.execute("""
-        UPDATE JournalEntries
+        UPDATE Moods
             SET
-                concept = ?,
-                entry = ?,
-                date = ?,
-                moods_id = ?
+                label = ?
         WHERE id = ?
-        """, (new_entry['concept'], new_entry['entry'],
-              new_entry['date'], new_entry['moodId'], id, ))
+        """, (new_mood['label'], id, ))
 
         # Were any rows affected?
         # Did the client send an `id` that exists?
