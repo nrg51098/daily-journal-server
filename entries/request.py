@@ -130,3 +130,39 @@ def update_entry(id, new_entry):
     else:
         # Forces 204 response by main module
         return True
+
+def get_entries_with_value(value):
+    with sqlite3.connect("./dailyjournal.db") as conn:
+        conn.row_factory = sqlite3.Row
+        db_cursor = conn.cursor()
+
+        queryString = f'%{value}%'
+        # Use a ? parameter to inject a variable's value
+        # into the SQL statement.
+        entries = []
+
+        db_cursor.execute("""
+         SELECT
+            a.id,
+            a.concept,
+            a.entry,
+            a.date,
+            a.moods_id
+        FROM JournalEntries a
+        WHERE a.entry LIKE ?
+        """, ( queryString, ))
+
+        data = db_cursor.fetchall()
+
+        for row in data:
+
+            # Create an entry instance from the current row.
+            # Note that the database fields are specified in
+            # exact order of the parameters defined in the
+            # entry class above.
+            entry = Entry(row['id'], row['concept'], row['entry'], row['date'],
+                            row['moods_id'])
+
+            entries.append(entry.__dict__)
+
+    return json.dumps(entries)

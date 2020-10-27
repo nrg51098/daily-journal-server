@@ -1,6 +1,6 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from entries import get_all_entries, get_single_entry, create_entry, delete_entry, update_entry
+from entries import get_all_entries, get_single_entry, create_entry, delete_entry, update_entry, get_entries_with_value
 from moods import get_all_moods, get_single_mood, create_mood, delete_mood, update_mood
 import json
 # Here's a class. It inherits from another class.
@@ -45,8 +45,20 @@ class HandleRequests(BaseHTTPRequestHandler):
                 if id is not None:
                     response = f"{get_single_mood(id)}"
                 else:
-                    response = f"{get_all_moods()}"            
+                    response = f"{get_all_moods()}" 
 
+        elif len(parsed) == 3:
+            ( resource, key, value ) = parsed
+
+            # Is the resource `customers` and was there a
+            # query parameter that specified the customer
+            # email as a filtering value?
+            if resource == "entries":
+                if key == "q" and value:
+                    response = get_entries_with_value(value)
+                else:
+                    response = get_all_entries()
+        
         
         self.wfile.write(response.encode())
 
